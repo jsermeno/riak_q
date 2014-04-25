@@ -39,6 +39,12 @@ def put_b_backend(arguments):
                      headers=headers)
     return r.text
 
+def d(arguments):
+    r = requests.delete(url=riak_url + '/buckets/' + arguments.bucket +
+                                       '/keys/' + arguments.key)
+
+    return r.text
+
 def d_b(arguments):
     key_data = json.loads(ls_k(arguments))['keys']
 
@@ -62,6 +68,10 @@ def main():
     k_parser.add_argument('bucket', help='bucket to search')
     k_parser.add_argument('key', help='key to find')
 
+    d_parser = subparsers.add_parser('d', help='delete key')
+    d_parser.add_argument('bucket', help='bucket')
+    d_parser.add_argument('key', help='key to delete')
+
     b_props_parser = subparsers.add_parser('b_props', help='get bucket properties')
     b_props_parser.add_argument('bucket', help='bucket to find')
 
@@ -81,6 +91,8 @@ def main():
         print ls_k(arguments)
     elif cmd == 'k':
         print k(arguments)
+    elif cmd == 'd':
+        print d(arguments)
     elif cmd == 'b_props':
         print b_props(arguments)
     elif cmd == 'put_b_backend':
