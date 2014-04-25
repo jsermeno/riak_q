@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+import requests
+import json
+
+riak_url = 'http://127.0.0.1:10018'
+
+def ls_b():
+    r = requests.get(url=riak_url + '/buckets?buckets=true')
+    return r.text
+
+def ls_k(arguments):
+    r = requests.get(url=riak_url + 
+                     '/buckets/' + arguments.bucket + 
+                     '/keys?keys=true')
+    return r.text
+    
+def k(arguments):
+    r = requests.get(url=riak_url + 
+                     '/buckets/' + arguments.bucket + 
+                     '/keys/' + arguments.key)
+    return r.text
+
+def b_props(arguments):
+    r = requests.get(url=riak_url + 
+                     '/buckets/' + arguments.bucket + 
+                     '/props')
+    return r.text
+
+def put_b_backend(arguments):
+    payload = {'props': {'backend': arguments.backend }}
+    headers = {'content-type': 'application/json'}
+    r = requests.put(url=riak_url + 
+                     '/buckets/' + arguments.bucket + 
+                     '/props',
+                     data=json.dumps(payload),
+                     headers=headers)
+    return r.text
+
+def d_b(arguments):
+    key_data = json.loads(ls_k(arguments))['keys']
+
+    for key in key_data:
+        r = requests.delete(url=riak_url + '/buckets/' + arguments.bucket +
+                                           '/keys/' + key)
+
+    return None
+
+def main():
+    # argument parsing and help
+    argparser = argparse.ArgumentParser(add_help=False)
+    subparsers = argparser.add_subparsers(help='sub-command help', dest='subparser_name')
+
+    ls_b_parser = subparsers.add_parser('ls_b', help='list buckets')
+
+    ls_k_parser = subparsers.add_parser('ls_k', help='list keys in a bucket')
+    ls_k_parser.add_argument('bucket', help='bucket to search')
+
+    k_parser = subparsers.add_parser('k', help='get key in a bucket')
+    k_parser.add_argument('bucket', help='bucket to search')
+    k_parser.add_argument('key', help='key to find')
+
+    b_props_parser = subparsers.add_parser('b_props', help='get bucket properties')
+    b_props_parser.add_argument('bucket', help='bucket to find')
+
+    put_b_backend_parser = subparsers.add_parser('put_b_backend', help='set bucket storage backend')
+    put_b_backend_parser.add_argument('bucket', help='bucket to find')
+    put_b_backend_parser.add_argument('backend', help='backend to set')
+
+    d_b_parser = subparsers.add_parser('d_b', help='delete bucket keys')
+    d_b_parser.add_argument('bucket', help='bucket to delete')
+
+    arguments = argparser.parse_args()
+    cmd = arguments.subparser_name
+
+    if cmd == 'ls_b':
+        print ls_b()
+    elif cmd == 'ls_k':
+        print ls_k(arguments)
+    elif cmd == 'k':
+        print k(arguments)
+    elif cmd == 'b_props':
+        print b_props(arguments)
+    elif cmd == 'put_b_backend':
+        print put_b_backend(arguments)
+    elif cmd == 'd_b':
+        print d_b(arguments)
+
+if __name__ == "__main__":
+    sys.exit(main())
